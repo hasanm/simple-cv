@@ -53,7 +53,8 @@
   (min-line-length :int)
   (max-line-gap :int))
 
-(cffi:defcfun "gaussian_blur" :int)
+(cffi:defcfun "gaussian_blur" :int
+  (m-size :int))
 
 (defun get-minimap ()
   (cut-image 1250 1200 1750 1425)
@@ -140,8 +141,10 @@
 ;; (hough-lines 60 0d0 pi)
 ;; (hough-lines-p 60 50 10)
 ; (hough-lines-p 40 150 10)
-(gaussian-blur)
-;; (sb-ext:exit)
+;; (gaussian-blur 101)
+(adaptive-threshold)
+(sb-ext:exit)
+
 
 ;;(sb-ext:exit)
 

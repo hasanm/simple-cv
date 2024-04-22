@@ -202,7 +202,7 @@ int adaptive_threshold ()
             dilate(channel[i], mDil, Mat::ones(7,7, CV_8UC1), Point(-1, -1));
             medianBlur(mDil, mBlur, 21);
             absdiff(channel[i], mBlur, mDiff);
-            mDiff = 255 - mDiff ;
+            absdiff(255, mDiff, mDiff);
             normalize(mDiff, mNorm, 0, 255, NORM_MINMAX, CV_8UC1);
             insertChannel(mNorm, merged, i);
         }
@@ -339,7 +339,7 @@ int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
 }
 
 
-int gaussian_blur()
+int gaussian_blur(int mSize)
 {
     Mat image;
     Mat fImage;
@@ -348,7 +348,7 @@ int gaussian_blur()
     Mat output;
     try {
         image = imread(INPUT_STRING, IMREAD_GRAYSCALE);
-        GaussianBlur(image, dst, Size(1001,1001) , 0, 0);
+        GaussianBlur(image, dst, Size(mSize, mSize) , 0, 0);
         divide(image, dst, result, 255);
         // result.convertTo(output, CV_8U, 255);
         imwrite(OUTPUT_STRING, result);
