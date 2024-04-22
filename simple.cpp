@@ -1,4 +1,4 @@
- // C program to display hostname
+// C program to display hostname
 // and IP address
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -329,6 +329,29 @@ int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
         // }
 
         imwrite(OUTPUT_STRING, cdstP);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int gaussian_blur()
+{
+    Mat image;
+    Mat fImage;
+    Mat dst;
+    Mat result;
+    Mat output;
+    try {
+        image = imread(INPUT_STRING, IMREAD_GRAYSCALE);
+        GaussianBlur(image, dst, Size(1001,1001) , 0, 0);
+        divide(image, dst, result, 255);
+        // result.convertTo(output, CV_8U, 255);
+        imwrite(OUTPUT_STRING, result);
         return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;

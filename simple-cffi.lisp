@@ -8,7 +8,7 @@
   (t (:default "libsimple")))
 
 
-(setq cffi:*foreign-library-directories* (list #P"/home/p-hasan/work/qt/simple/build/"))
+(setq cffi:*foreign-library-directories* (list #P"/home/p-hasan/work/qt/simple-cv/build/"))
 
 (cffi:use-foreign-library libsimple)
 ;; (cffi:load-foreign-library 'libsimple)
@@ -52,6 +52,8 @@
   (edge-thresh :int)
   (min-line-length :int)
   (max-line-gap :int))
+
+(cffi:defcfun "gaussian_blur" :int)
 
 (defun get-minimap ()
   (cut-image 1250 1200 1750 1425)
@@ -130,14 +132,17 @@
            ))))
 ;; (load-image "/data/001233702.PNG")
 ;; (draw-rectangle 0 0 1000 500)
-(test 3)
+(test 1)
 ;; (my-merge)
 ;; (canny-edge 50)
 ;; (hough-lines 60 50 10 (+ (/ pi 6) (/ pi 2)) pi)
 ;; (hough-lines 60 50 10 0d0 pi)
 ;; (hough-lines 60 0d0 pi)
 ;; (hough-lines-p 60 50 10)
-(hough-lines-p 40 150 10)
+; (hough-lines-p 40 150 10)
+(gaussian-blur)
+;; (sb-ext:exit)
+
 ;;(sb-ext:exit)
 
 
@@ -168,4 +173,3 @@
 
 
 ;; (cffi:close-foreign-library 'libsimple)
-
