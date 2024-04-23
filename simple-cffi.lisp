@@ -1,5 +1,6 @@
 (require :cffi)
 (require :cffi-libffi)
+(require :cl-ppcre)
 
 ;; (push #P"/home/p-hasan/src/lisp/lisp-magick-wand/" asdf:*central-registry*)
 ;; (require "lisp-magick-wand")
@@ -50,6 +51,20 @@
   (handle my-container)
   (filename :pointer)
   (read-mode :int))
+
+
+(cffi:defcfun "new_lines" :int
+  (handle my-container))
+
+(cffi:defcfun "push_line" :int
+  (handle my-container)
+  (x1 :int)
+  (x2 :int)
+  (y1 :int)
+  (y2 :int))
+
+(cffi:defcfun "draw_lines" :int
+  (handle my-container))
 
 (cffi:defcfun "draw_rectangle" :int
   (x :int)
@@ -160,7 +175,7 @@
 ;; (hough-lines 60 50 10 0d0 pi)
 ;; (hough-lines 60 0d0 pi)
 ;; (hough-lines-p 60 50 10)
-; (hough-lines-p 40 150 10)
+(hough-lines-p 40 50 10)
 ;; (gaussian-blur 101)
 ;; (adaptive-threshold)
 ;; (sb-ext:exit)
@@ -174,6 +189,23 @@
            (loop for i from 1 to 10
             do (format t "~a: ~a~%" i (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))))))))
 
+(defun load-lines ()
+  (let ((filename "/data/aoe_images/lines.txt")
+        (lines))
+    (with-open-file (in filename)
+      (loop for line = (read-line in nil)
+            while line
+            do (let* ((my-line (remove #\Return line))
+                     (points (mapcar #'parse-integer (cl-ppcre:split "," my-line)))
+                      (x1 (nth 0 points))
+                      (x2 (nth 1 points))
+                      (y1 (nth 2 points))
+                      (y2 (nth 3 points))
+                      (slope (abs (/ (- y1 y2) (- x1 x2)))))
+                 (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
+                 (push (list x1 x2 y1 y2) lines))))
+    lines))
+
 
 (defun my-load-image () 
   (let ((image-filenames '(
@@ -182,15 +214,26 @@
                            "/data/images/IMG_20221013_040225_1392.JPG"
                            ))
         (handle (make-instance 'my-container)))
-    (loop for image-filename in image-filenames
-          for i from 1
-          do (let ()
-               (unwind-protect
-                    (cffi:with-foreign-string (filename image-filename)
-                      (format t "~a : ~a~%" i (load-image handle filename (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR)))
-                      ))))))
+    (unwind-protect
+         (cffi:with-foreign-string (filename (first image-filenames))
+           (copy-image filename)
+           (let ((lines (load-lines)))
+             (new-lines handle)
+             (loop for line in lines
+                   do (let ((x1 (nth 0 line))
+                            (x2 (nth 1 line))
+                            (y1 (nth 2 line))
+                            (y2 (nth 3 line)))
+                        (format t "~a~%" line)
+                        (push-line handle x1 x2 y1 y2)
 
-; (my-load-image "/data/images/IMG_20221013_040217_1391.JPG")
+                        ))
+             (draw-lines handle))))))
+
+
+
+                                        ; (my-load-image "/data/images/IMG_20221013_040217_1391.JPG")
+                                        ; (my-load-image)
 (my-load-image)
 (sb-ext:exit)
 

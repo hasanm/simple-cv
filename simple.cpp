@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <fstream> 
 #include <map>
 #include <vector> 
 #include "simple.h"
@@ -16,6 +17,7 @@ using namespace std;
 
 static const char INPUT_STRING[] = "/data/aoe_images/my.png";
 static const char OUTPUT_STRING[] = "/data/aoe_images/out.png";
+static const char LINES_FILENAME[] = "/data/aoe_images/lines.txt";
 
 int copy_image(char *filename)
 {
@@ -272,6 +274,7 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
     Mat src;
     Mat dst;
     Mat cdst;
+    ofstream myfile; 
     try {
         srand(time(NULL));
         src = imread(INPUT_STRING, IMREAD_GRAYSCALE);
@@ -280,6 +283,7 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
 
         vector<Vec2f> lines;
         HoughLines(dst, lines, 1, CV_PI/180, 150, 0, 0, minTheta, maxTheta);
+        myfile.open(LINES_FILENAME);
 
         for (size_t i= 0; i < lines.size(); i++){
 
@@ -294,6 +298,7 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
             pt2.y = cvRound(y0 - 1000 * (a));
             line (cdst, pt1, pt2, Scalar(0,0,255), 3 , LINE_AA);
         }
+        myfile.close();
 
         imwrite(OUTPUT_STRING, cdst);
         return 0;
@@ -310,6 +315,7 @@ int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
     Mat src;
     Mat dst;
     Mat cdstP;
+    ofstream myfile; 
     try {
         srand(time(NULL));
         src = imread(INPUT_STRING, IMREAD_GRAYSCALE);
@@ -318,14 +324,17 @@ int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
 
         vector<Vec4i> linesP;
         HoughLinesP(dst, linesP, 1, CV_PI/180, 50, minLineLength, maxLineGap);
+        myfile.open(LINES_FILENAME);
         for (size_t i = 0; i < linesP.size(); i++) {
             Vec4i l = linesP[i];
-            cout << i << ": (" << l[0] << "," << l[1] << "), (" << l[2] << "," << l[3] << ")" << endl;
+            // cout << i << ": (" << l[0] << "," << l[1] << "), (" << l[2] << "," << l[3] << ")" << endl;
+            myfile << l[0] << "," << l[1] << "," << l[2] << "," << l[3] << endl; 
             int rgb[] = {0,0,0};
             rgb[i%3] = 255;
 
             line(cdstP, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(rgb[0], rgb[1], rgb[2]), 3 , LINE_AA);
         }
+        myfile.close();
         rectangle (cdstP, Point(0,0), Point (20,20), Scalar(0,0,255), 2);
         // for (int i= 1; i< 40; i++) {
         //     circle (cdstP, Point(0,0), i * 100, Scalar(0,0,255), 2);
@@ -374,6 +383,60 @@ int load_image(void* ptr, char* filename, int color_mode)
     try {
         MyContainer* c = static_cast<MyContainer*> (ptr);
         return c->load_image(filename, color_mode);
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int push_line(void* ptr, int x1, int x2, int y1, int y2)
+{
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+        c->push_line(x1, x2,  y1, y2);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int draw_lines(void* ptr)
+{
+    Mat src;
+    Mat dst; 
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+        vector<Vec4i> lines = c->get_lines();
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        for (int i=0; i < lines.size(); i++) {
+            line(src, Point(lines[i][0], lines [i][1]), Point(lines[i][2], lines [i][3]),
+                 Scalar(255,0,0), 3 , LINE_AA);
+                 
+        } 
+        imwrite(OUTPUT_STRING, src);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int new_lines(void* ptr)
+{
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+        c->new_lines();
+        return 0; 
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
         cerr << e.what();
