@@ -9,7 +9,7 @@ find_package(OpenCV REQUIRED )
 
 
 
-add_library(simple SHARED simple.cpp)
+add_library(simple SHARED MyContainer.cpp simple.cpp)
 
 target_include_directories(simple PUBLIC
                            "${PROJECT_BINARY_DIR}"

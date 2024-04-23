@@ -16,7 +16,9 @@ extern "C" {
     int canny_edge(int edgeThresh);
     int hough_lines(int edgeThresh, double minTheta, double maxTheta);
     int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap);
-    int gaussian_blur(int mSize); 
+    int gaussian_blur(int mSize);
+    void* easy_init();
+    int load_image(void* container, char *filename, int color_mode);
 
 #ifdef __cplusplus
 }

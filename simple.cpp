@@ -6,7 +6,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <map>
+#include <vector> 
 #include "simple.h"
+#include "MyContainer.h"
 
 using namespace cv;
 using namespace std;
@@ -361,10 +364,27 @@ int gaussian_blur(int mSize)
     return 0;
 }
 
+void* easy_init () {
+    MyContainer* c = new MyContainer; 
+    return c; 
+}
+
+int load_image(void* ptr, char* filename, int color_mode)
+{
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+        return c->load_image(filename, color_mode);
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
 
 // Driver code
 int main()
 {
-
     return 0;
 }

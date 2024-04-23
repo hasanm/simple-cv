@@ -7,14 +7,32 @@
 (cffi:define-foreign-library libsimple
   (t (:default "libsimple")))
 
-
 (setq cffi:*foreign-library-directories* (list #P"/home/p-hasan/work/qt/simple-cv/build/"))
 
 (cffi:use-foreign-library libsimple)
 ;; (cffi:load-foreign-library 'libsimple)
 
-(cffi:defcstruct person
-  (number :int))
+(cffi:defcenum imread-modes
+  :IMREAD_GRAYSCALE
+  :IMREAD_COLOR)
+
+(cffi:defcfun "easy_init" :pointer)
+
+(defclass my-container ()
+  ((pointer :initform (easy-init))
+   (c-strings :initform '())
+   ))
+
+(cffi:define-foreign-type my-container-type ()
+  ()
+  (:actual-type :pointer)
+  (:simple-parser my-container))
+
+(defmethod cffi:translate-to-foreign (handle (type my-container-type))
+  (slot-value handle 'pointer))
+
+
+(cffi:defcfun "adaptive_threshold" :int)
 
 (cffi:defcfun "copy_image" :int
   (filename :pointer))
@@ -27,6 +45,11 @@
   (y :int)
   (p :int)
   (q :int))
+
+(cffi:defcfun "load_image" :int
+  (handle my-container)
+  (filename :pointer)
+  (read-mode :int))
 
 (cffi:defcfun "draw_rectangle" :int
   (x :int)
@@ -86,10 +109,7 @@
    (cut-image x 10 (+ x 210) 70))
   )
 
-(defun load-image (filename)
-  (unwind-protect
-       (cffi:with-foreign-string (f filename)
-         (copy-image f))))
+
 
 (defun save-image (filename)
   (unwind-protect
@@ -142,11 +162,40 @@
 ;; (hough-lines-p 60 50 10)
 ; (hough-lines-p 40 150 10)
 ;; (gaussian-blur 101)
-(adaptive-threshold)
+;; (adaptive-threshold)
+;; (sb-ext:exit)
+
+
+
+(defun my-load-image (filename)
+  (let ((handle (make-instance 'my-container)))
+    (unwind-protect
+         (cffi:with-foreign-string (f filename)
+           (loop for i from 1 to 10
+            do (format t "~a: ~a~%" i (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))))))))
+
+
+(defun my-load-image () 
+  (let ((image-filenames '(
+                           "/data/images/IMG_20221013_040208_1390.JPG"
+                           "/data/images/IMG_20221013_040217_1391.JPG"
+                           "/data/images/IMG_20221013_040225_1392.JPG"
+                           ))
+        (handle (make-instance 'my-container)))
+    (loop for image-filename in image-filenames
+          for i from 1
+          do (let ()
+               (unwind-protect
+                    (cffi:with-foreign-string (filename image-filename)
+                      (format t "~a : ~a~%" i (load-image handle filename (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR)))
+                      ))))))
+
+; (my-load-image "/data/images/IMG_20221013_040217_1391.JPG")
+(my-load-image)
 (sb-ext:exit)
 
 
-;;(sb-ext:exit)
+
 
 
 
