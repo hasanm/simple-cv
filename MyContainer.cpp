@@ -31,3 +31,10 @@ int MyContainer::push_line(int x1, int x2, int y1, int y2) {
 vector<Vec4i> MyContainer::get_lines() {
     return lines;
 } 
+
+
+int MyContainer::push_image(Mat mat) {
+    store.push_back(mat);
+    size_t pos = store.size() - 1;
+    return pos; 
+} 

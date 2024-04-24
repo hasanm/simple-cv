@@ -18,6 +18,7 @@ using namespace std;
 static const char INPUT_STRING[] = "/data/aoe_images/my.png";
 static const char OUTPUT_STRING[] = "/data/aoe_images/out.png";
 static const char LINES_FILENAME[] = "/data/aoe_images/lines.txt";
+static const char RHOS_FILENAME[] = "/data/aoe_images/rhos.txt";
 
 int copy_image(char *filename)
 {
@@ -70,10 +71,10 @@ int  draw_rectangle(int x, int y, int p, int q)
 {
     Mat mat;
     try {
-    mat = imread("/data/aoe_images/my.png", IMREAD_COLOR);
+    mat = imread(INPUT_STRING, IMREAD_COLOR);
     Mat dst = mat.clone();
     rectangle (dst, Point(x,y), Point (p,q), Scalar(0), 2);
-    imwrite("/data/aoe_images/out.png", dst);
+    imwrite(OUTPUT_STRING, dst);
     return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
@@ -283,12 +284,13 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
 
         vector<Vec2f> lines;
         HoughLines(dst, lines, 1, CV_PI/180, 150, 0, 0, minTheta, maxTheta);
-        myfile.open(LINES_FILENAME);
+        myfile.open(RHOS_FILENAME);
 
         for (size_t i= 0; i < lines.size(); i++){
 
             float rho = lines[i][0], theta = lines[i][1];
-            cout << i << ": (" << rho << "," << theta << ")" << endl;
+            myfile << rho << "," << theta << endl; 
+            // cout << i << ": (" << rho << "," << theta << ")" << endl;
             Point pt1, pt2;
             double a = cos(theta), b = sin(theta);
             double x0 = a * rho, y0 = b * rho;
@@ -310,7 +312,7 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
     return 0;
 }
 
-int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
+int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxLineGap)
 {
     Mat src;
     Mat dst;
@@ -323,7 +325,7 @@ int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
         cvtColor(dst, cdstP, COLOR_GRAY2BGR);
 
         vector<Vec4i> linesP;
-        HoughLinesP(dst, linesP, 1, CV_PI/180, 50, minLineLength, maxLineGap);
+        HoughLinesP(dst, linesP, 1, CV_PI/180, voteThreshold, minLineLength, maxLineGap);
         myfile.open(LINES_FILENAME);
         for (size_t i = 0; i < linesP.size(); i++) {
             Vec4i l = linesP[i];
@@ -341,6 +343,36 @@ int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap)
         // }
 
         imwrite(OUTPUT_STRING, cdstP);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int hough_circles()
+{
+    Mat src;
+    Mat gray; 
+    Mat dst;
+    try {
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        medianBlur(gray, gray, 5);
+        vector <Vec3f> circles;
+        HoughCircles (gray, circles, HOUGH_GRADIENT, 1, gray.rows/16, 100, 30, 1, 30);
+        for (size_t i = 0; i < circles.size() ; i++) {
+            Vec3i c = circles[i];
+            Point center = Point(c[0], c[1]);
+            circle (src, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
+            int radius = c[2];
+            circle (src, center, radius, Scalar(255, 0, 255), 3, LINE_AA);
+        } 
+        
+        imwrite(OUTPUT_STRING, src);
         return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
@@ -443,6 +475,74 @@ int new_lines(void* ptr)
         return -1;
     }
     return 0;
+}
+
+int find_contours (int mSize, int edgeThresh)
+{
+    Mat src;
+    Mat dst;
+    Mat mBlur;
+    Mat edge1;
+    Mat cedge;
+    Mat gray;
+
+    vector <vector<Point> > contours; 
+    vector< vector<Point> > contours0;
+
+    vector <vector<Point> > final_contours; 
+    vector<Vec4i> hierarchy;
+
+    int max_idx = -1;
+    float max_area = 0; 
+
+    int max_binary_value = 255;
+    double area; 
+
+    try {
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        cedge.create(src.size(), src.type());
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        blur(gray, mBlur, Size(3, 3));
+        Canny(mBlur, edge1, edgeThresh, edgeThresh*3, 3);
+
+        src.copyTo(cedge, edge1);
+        
+        findContours(edge1, contours0, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+
+        contours.resize(contours0.size());
+        final_contours.resize(contours0.size());
+
+
+        for( size_t k = 0; k < contours0.size(); k++ ) {
+            approxPolyDP(Mat(contours0[k]), contours[k], 3, true);
+            area = contourArea(contours[k]);
+
+            if (area > 1000) {
+                 // cout << k << " : "  << contours[k] << " ," <<  area << ", " << hierarchy[k] << endl;
+                cout << area << "," << k << endl; 
+            } 
+        } 
+
+
+        Mat cnt_img = Mat::zeros(src.rows, src.cols, CV_8UC3);
+
+        int idx = 0;
+        for( ; idx >= 0; idx = hierarchy[idx][0] ){
+            Scalar color( rand()&255, rand()&255, rand()&255 );
+            drawContours( cnt_img, contours, idx, color,3,  LINE_AA, hierarchy );
+        }
+
+        // drawContours(cnt_img, contours, -1, Scalar(128, 255,255),3, LINE_AA, hierarchy);
+        
+        imwrite(OUTPUT_STRING, cnt_img);
+
+
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
 }
 
 

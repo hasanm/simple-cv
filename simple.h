@@ -15,13 +15,15 @@ extern "C" {
     int grab_cut();
     int canny_edge(int edgeThresh);
     int hough_lines(int edgeThresh, double minTheta, double maxTheta);
-    int hough_lines_p(int edgeThresh, int minLineLength, int maxLineGap);
+    int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxLineGap);
+    int hough_circles();
     int gaussian_blur(int mSize);
     void* easy_init();
     int load_image(void* container, char *filename, int color_mode);
     int new_lines(void* container);
     int push_line(void* container, int x1, int x2, int y1, int y2);
     int draw_lines(void* container);
+    int find_contours(int mSize, int edgeThresh);
 
 #ifdef __cplusplus
 }

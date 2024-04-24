@@ -5,6 +5,12 @@
 ;; (push #P"/home/p-hasan/src/lisp/lisp-magick-wand/" asdf:*central-registry*)
 ;; (require "lisp-magick-wand")
 
+
+(defparameter *input* "/data/aoe_images/my.png")
+(defparameter *output* "/data/aoe_images/out.png")
+(defparameter *lines* "/data/aoe_images/lines.txt")
+(defparameter *rhos* "/data/aoe_images/rhos.txt")
+
 (cffi:define-foreign-library libsimple
   (t (:default "libsimple")))
 
@@ -88,11 +94,18 @@
 
 (cffi:defcfun "hough_lines_p" :int
   (edge-thresh :int)
+  (vote-thresh :int)
   (min-line-length :int)
   (max-line-gap :int))
 
 (cffi:defcfun "gaussian_blur" :int
   (m-size :int))
+
+(cffi:defcfun "find_contours" :int
+  (m-size :int)
+  (edge-thresh :int))
+
+(cffi:defcfun "hough_circles" :int)
 
 (defun get-minimap ()
   (cut-image 1250 1200 1750 1425)
@@ -125,6 +138,11 @@
   )
 
 
+(defun save-this ()
+  (let ()
+    (unwind-protect
+         (cffi:with-foreign-string (filename *output*)
+           (copy-image filename)))))
 
 (defun save-image (filename)
   (unwind-protect
@@ -171,23 +189,21 @@
 (test 1)
 ;; (my-merge)
 ;; (canny-edge 50)
-;; (hough-lines 60 50 10 (+ (/ pi 6) (/ pi 2)) pi)
+;; (hough-lines 60 10d0 (+ (/ pi 6) (/ pi 2)) pi)
 ;; (hough-lines 60 50 10 0d0 pi)
-;; (hough-lines 60 0d0 pi)
+;; (hough-lines 150 0d0 pi)
 ;; (hough-lines-p 60 50 10)
-(hough-lines-p 40 50 10)
+;; (hough-lines-p 40 50 10)
 ;; (gaussian-blur 101)
 ;; (adaptive-threshold)
 ;; (sb-ext:exit)
-
-
 
 (defun my-load-image (filename)
   (let ((handle (make-instance 'my-container)))
     (unwind-protect
          (cffi:with-foreign-string (f filename)
            (loop for i from 1 to 10
-            do (format t "~a: ~a~%" i (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))))))))
+                 do (format t "~a: ~a~%" i (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))))))))
 
 (defun load-lines ()
   (let ((filename "/data/aoe_images/lines.txt")
@@ -202,12 +218,27 @@
                       (y1 (nth 2 points))
                       (y2 (nth 3 points))
                       (slope (abs (/ (- y1 y2) (- x1 x2)))))
-                 (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
+                 ;; (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
                  (push (list x1 x2 y1 y2) lines))))
     lines))
 
 
-(defun my-load-image () 
+(defun load-rhos ()
+  (let ((filename "/data/aoe_images/rhos.txt")
+        (lines))
+    (with-open-file (in filename)
+      (loop for line = (read-line in nil)
+            while line
+            do (let* ((my-line (remove #\Return line))
+                      (parts (cl-ppcre:split "," my-line))
+                      (rho (read-from-string (nth 0 parts)))
+                      (theta (read-from-string (nth 1 parts))))
+                 (format t "~10d|~10,3f~%" rho theta)
+                 )))
+    lines))
+
+
+(defun my-load-image (index) 
   (let ((image-filenames '(
                            "/data/images/IMG_20221013_040208_1390.JPG"
                            "/data/images/IMG_20221013_040217_1391.JPG"
@@ -215,56 +246,37 @@
                            ))
         (handle (make-instance 'my-container)))
     (unwind-protect
-         (cffi:with-foreign-string (filename (first image-filenames))
+         (cffi:with-foreign-string (filename (nth index image-filenames))
            (copy-image filename)
+           (hough-lines-p 40 50 50 10)           
            (let ((lines (load-lines)))
              (new-lines handle)
              (loop for line in lines
-                   do (let ((x1 (nth 0 line))
-                            (x2 (nth 1 line))
-                            (y1 (nth 2 line))
-                            (y2 (nth 3 line)))
-                        (format t "~a~%" line)
-                        (push-line handle x1 x2 y1 y2)
+                   for i from 0
+                   do (let* ((x1 (nth 0 line))
+                             (x2 (nth 1 line))
+                             (y1 (nth 2 line))
+                             (y2 (nth 3 line))
+                             (diff-x (abs (- x1 x2)))
+                             (diff-y (abs (- y1 y2)))
+                             (l
+                               (sqrt
+                                (+ (expt diff-x 2)
+                                   (expt diff-y 2)
+                                   )))
+                             (slope (/ diff-y diff-x))
 
-                        ))
+                             )
+
+                        (progn
+                          ;; (format t "~a~%" line)
+                          (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
+                          (push-line handle x1 x2 y1 y2))))
              (draw-lines handle))))))
 
-
-
-                                        ; (my-load-image "/data/images/IMG_20221013_040217_1391.JPG")
-                                        ; (my-load-image)
-(my-load-image)
+;; (find-contours 101 40)
+(hough-circles)
 (sb-ext:exit)
 
 
 
-
-
-
-
-
-;; (make-gray)
-
-;; (my-merge)
-
-;; (save-image "/data/images/merged.png")
-
-;; (adaptive-threshold)
-
-
-
-;;(copy-image 1250 1200 1750 1425)
-
-;; (cut-image 100 100 300 300)
-
-;; (reload)
-;; (get-minimap)
-
-
-;; (sb-ext:exit)
-
-
-
-
-;; (cffi:close-foreign-library 'libsimple)
