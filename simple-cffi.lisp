@@ -115,6 +115,8 @@
   (max-radius :int)    
   )
 
+(cffi:defcfun "find_inside" :int)
+
 (defun get-minimap ()
   (cut-image 1250 1200 1750 1425)
   )
@@ -159,11 +161,27 @@
   )
 
 
-(defun test (n)
+(defun load-some-image (n)
   (let ((image-filenames '(
                            "/data/images/IMG_20221013_040208_1390.JPG"
                            "/data/images/IMG_20221013_040217_1391.JPG"
-                           "/data/images/IMG_20221013_040225_1392.JPG"                           
+                           "/data/images/IMG_20221013_040225_1392.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1335.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1348.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1344.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1339.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1338.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1333.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1342.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1334.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1347.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1337.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1346.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1343.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1341.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1345.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1340.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1336.JPG"
                            "/data/aoe_images/Screenshot 2022-04-10 14.23.17.png"
                            "/data/aoe_images/Screenshot 2022-04-23 22.41.28.png"
                            "/data/aoe_images/Screenshot 2022-05-07 17.15.09.png"
@@ -191,7 +209,9 @@
          (cffi:with-foreign-string (filename (nth n image-filenames))
            (copy-image filename)
            ;; (cut-image 1250 1200 1750 1425)
-           ))))
+           ))
+    (nth n image-filenames)
+    ))
 ;; (load-image "/data/001233702.PNG")
 ;; (draw-rectangle 0 0 1000 500)
 ;; (my-merge)
@@ -298,11 +318,103 @@
              (draw-lines handle))))))
 
 ;; (find-contours 101 40)
-(test 1)
+;; (adaptive-threshold)
+
+(defun my-test (n)
+  (let () 
+    (load-some-image n)
+    (let ((likely-center (find-inside)))
+      (format t "likely-center ~a~%" likely-center)
+
+      (hough-circles 1d0 50d0 50d0 30 60)
+      (let ((circles (sort
+                      (load-circles)
+                      (lambda (x y)
+                        (< (abs (- likely-center x))
+                           (abs (- likely-center y))
+                           )
+                        )
+                      :key
+                      #'first))
+            (more-circles)
+            )
+        
+        (loop for item in '((0 1)
+                            (0 2)
+                            (1 2))
+              do (let* ((a (first item))
+                        (b (second item))
+                        (a-circle (nth a circles))
+                        (b-circle (nth b circles)))
+                   (push (list (abs (- (first a-circle) (first b-circle)))
+                               a-circle
+                               b-circle)
+                         more-circles
+                         )))
+        (let* ((majority (first (sort more-circles #'< :key #'first)) )
+               (x (first (second majority)))
+               (y1 (second (second majority)))
+               (y2 (second (third majority)))
+               (d (abs (- y1 y2)))
+               (rx-1 (max 0( - x
+                            (ceiling (/ d 8)))))
+               (ry-1(- y1
+                             (ceiling (/ d 3))))
+               (rx-2       (+ x (ceiling (* d 1.9))))
+               (ry-2 (+ y1
+                             (ceiling (* d 2.25))))
+               )
+          (format t "More ~a : ~a , ~a , ~a, ~a~%" majority x y1 y2 d)
+          (format t "Rectangle : ~a , ~a , ~a, ~a~%" rx-1 ry-1 rx-2 ry-2)          
+          (draw-rectangle rx-1
+                          ry-1
+                          rx-2
+                          ry-2)
+
+          (cut-image rx-1 ry-1 rx-2 ry-2)
+          (save-this)
+          (gaussian-blur 101)
+          )))))
+
+
+;; (my-test 3)
+(load-some-image 3)
 ;; (experiment)
+;; (grab-cut)
+;; (hough-lines-p 40 50 50 10)
+(experiment)
 
-;; (hough-circles 1.5d0 100d0 50d0 30 100)
+(defun process-lines () 
+  (let ((handle (make-instance 'my-container)))
+    (unwind-protect
+         (cffi:with-foreign-string (s "" )
+           (let ((lines (load-lines)))
+             (new-lines handle)
+             (loop for line in lines
+                   for i from 0
+                   do (let* ((x1 (nth 0 line))
+                             (x2 (nth 1 line))
+                             (y1 (nth 2 line))
+                             (y2 (nth 3 line))
+                             (diff-x (abs (- x1 x2)))
+                             (diff-y (abs (- y1 y2)))
+                             (l
+                               (sqrt
+                                (+ (expt diff-x 2)
+                                   (expt diff-y 2)
+                                   )))
+                             (slope (/ diff-y diff-x))
 
-;; (format t "~a~%" (sort (load-circles) #'< :key #'first))  
+                             )
+
+                        (progn
+                          ;; (format t "~a~%" line)
+                          (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
+                          (push-line handle x1 x2 y1 y2))))
+             (draw-lines handle))))))
+
 ;; (sb-ext:exit)
+
+
+
 

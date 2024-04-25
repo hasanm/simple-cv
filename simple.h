@@ -25,6 +25,7 @@ extern "C" {
     int push_line(void* container, int x1, int x2, int y1, int y2);
     int draw_lines(void* container);
     int find_contours(int mSize, int edgeThresh);
+    int find_inside();
 
 #ifdef __cplusplus
 }

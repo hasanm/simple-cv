@@ -62,6 +62,7 @@ int cut_image(int x, int y, int p, int q)
     return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
+        cerr << e.what();        
         return -1;
     }
 }
@@ -316,14 +317,14 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
 int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxLineGap)
 {
     Mat src;
+    Mat gray; 
     Mat dst;
-    Mat cdstP;
     ofstream myfile;
     try {
         srand(time(NULL));
-        src = imread(INPUT_STRING, IMREAD_GRAYSCALE);
-        Canny(src, dst, edgeThresh, edgeThresh*3, 3);
-        cvtColor(dst, cdstP, COLOR_GRAY2BGR);
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        Canny(gray, dst, edgeThresh, edgeThresh*3, 3);
 
         vector<Vec4i> linesP;
         HoughLinesP(dst, linesP, 1, CV_PI/180, voteThreshold, minLineLength, maxLineGap);
@@ -335,15 +336,10 @@ int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxL
             int rgb[] = {0,0,0};
             rgb[i%3] = 255;
 
-            line(cdstP, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(rgb[0], rgb[1], rgb[2]), 3 , LINE_AA);
+            line(src, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(rgb[0], rgb[1], rgb[2]), 3 , LINE_AA);
         }
         myfile.close();
-        rectangle (cdstP, Point(0,0), Point (20,20), Scalar(0,0,255), 2);
-        // for (int i= 1; i< 40; i++) {
-        //     circle (cdstP, Point(0,0), i * 100, Scalar(0,0,255), 2);
-        // }
-
-        imwrite(OUTPUT_STRING, cdstP);
+        imwrite(OUTPUT_STRING, src);
         return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
@@ -396,14 +392,17 @@ int hough_circles(double dp, double param1, double param2, int minRadius, int ma
     Mat src;
     Mat gray;
     Mat dst;
+    Mat mBlur; 
     char buffer[100];
     ofstream myfile;
     try {
         src = imread(INPUT_STRING, IMREAD_COLOR);
         cvtColor(src, gray, COLOR_BGR2GRAY);
-        medianBlur(gray, gray, 5);
+        // medianBlur(gray, gray, 5);
+        GaussianBlur(gray, mBlur, Size(11,11) , 0, 0);
         vector <Vec3f> circles;
-        HoughCircles (gray, circles, HOUGH_GRADIENT, 1.5, gray.rows/16, param1, param2, minRadius, maxRadius);
+        // HoughCircles (gray, circles, HOUGH_GRADIENT, 1.5, gray.rows/16, param1, param2, minRadius, maxRadius);
+        HoughCircles (mBlur, circles, HOUGH_GRADIENT, 1.5, gray.rows/16, param1, param2, minRadius, maxRadius);
         myfile.open(CIRCLES_FILENAME);
         for (size_t i = 0; i < circles.size() ; i++) {
             Vec3i c = circles[i];
@@ -591,7 +590,7 @@ int find_contours (int mSize, int edgeThresh)
 }
 
 
-int experiment()
+int experiment1()
 {
     Mat src;
     Mat gray;
@@ -661,6 +660,249 @@ int experiment()
         }
 
         imwrite(OUTPUT_STRING, binary);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int experiment2()
+{
+    Mat src;
+    Mat gray;
+    Mat binary;
+    Mat dst;
+    Mat blur;
+    Mat channel[3];
+    ofstream myfile;
+    char buffer[100];
+    try {
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        int cols = src.cols;
+        int rows = src.rows;
+
+        cout << "Rows : " << rows << " Cols: " << cols << endl; 
+
+        int start = 0;
+
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        medianBlur(gray, blur, 7);
+        threshold(blur, binary, 40, 255, THRESH_BINARY | THRESH_OTSU);
+
+        int x = 0;
+        int y = rows / 3;
+
+
+        int count =10; 
+        for (; x < cols/2 ; x++ ) {
+            Point center = Point(x, y);
+            uchar elem = binary.at<uchar> (x,y);
+            int val = elem;             
+            if (elem > 128) {
+                cout << x << " : " << y << "=> " << val << endl;                 
+                count--;
+
+            }
+
+            if (count < 0) {
+                cout << center << endl; 
+                circle(src, center, 50, Scalar (0,0,255), 3 , LINE_AA);
+                circle(binary, center, 50, Scalar (0), 3 , LINE_AA);                
+                break; 
+            } 
+        }
+
+
+        x = cols / 3;
+        y = rows - 1;
+
+        count =10;
+        int black_found = 0; 
+        for ( ; y  > rows/2 ; y-- ) {
+            Point center = Point(x, y);
+            uchar elem = binary.at<uchar>(x,y);
+            int val = elem;
+            if (elem < 128
+                && black_found == 0) {
+                cout << "Black Found " << x << ":" << y << endl; 
+                black_found = 1; 
+            } 
+            if (elem >128
+                && black_found == 1) {
+                cout << x << " : " << y << "=> " << val << endl; 
+                count--;
+
+            }
+
+            if (count < 0) {
+                cout << center << endl; 
+                circle(src, center, 30, Scalar (0,0,255), 3 , LINE_AA);
+                circle(binary, center, 30, Scalar (255), 3 , LINE_AA);
+                break; 
+            } 
+        }
+
+
+        x = cols / 3;
+        y = 0;
+
+        count =10; 
+        for ( ; y  < rows/2 ; y++ ) {
+            Point center = Point(x, y);
+            uchar elem = binary.at<uchar>(x,y);
+            int val = elem;
+            if (elem >128) {
+                cout << x << " : " << y << "=> " << val << endl; 
+                count--;
+
+            }
+
+            if (count < 0) {
+                cout << center << endl; 
+                circle(src, center, 30, Scalar (0,0,255), 3 , LINE_AA);
+                circle(binary, center, 30, Scalar (255), 3 , LINE_AA);
+                line (binary, Point(x, y), Point (x, y+250), Scalar(0), 3, LINE_AA);
+                break; 
+            } 
+        }                
+
+        x = cols - 1; 
+        y = rows/3; 
+
+        count =10; 
+        for ( ; x  > cols/2 ; y-- ) {
+            Point center = Point(x, y);
+            uchar elem = binary.at<uchar>(x,y);
+            int val = elem;
+            if (elem >128) {
+                cout << x << " : " << y << "=> " << val << endl; 
+                count--;
+
+            }
+
+            if (count < 0) {
+                cout << center << endl; 
+                circle(src, center, 30, Scalar (0,0,255), 3 , LINE_AA);
+                circle(binary, center, 30, Scalar (255), 3 , LINE_AA);
+                break; 
+            } 
+        }        
+        
+
+        imwrite(OUTPUT_STRING, binary);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+int find_inside() {
+    Mat src;
+    Mat gray;
+    Mat binary;
+    Mat dst;
+    Mat blur;
+    Mat channel[3];
+    ofstream myfile;
+    char buffer[100];
+    int ret_val  = -1;
+    try {
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        int cols = src.cols;
+        int rows = src.rows;
+
+        cout << "Rows : " << rows << " Cols: " << cols << endl;
+
+        int start = 0;
+
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        medianBlur(gray, blur, 7);
+        threshold(blur, binary, 40, 255, THRESH_BINARY | THRESH_OTSU);
+
+        int x = 0;
+        int y = rows / 3;
+
+
+        int count =10;
+        for (; x < cols/2 ; x++ ) {
+            Point center = Point(x, y);
+            uchar elem = binary.at<uchar> (x,y);
+            int val = elem;
+            if (elem > 128) {
+                cout << x << " : " << y << "=> " << val << endl;
+                count--;
+
+            }
+
+            if (count < 0) {
+                cout << center << endl;
+                ret_val = x;
+                circle(src, center, 50, Scalar (0,0,255), 3 , LINE_AA);
+                circle(binary, center, 50, Scalar (0), 3 , LINE_AA);
+                break;
+            }
+        }
+
+
+        return ret_val;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int experiment()
+{
+    Mat src;
+    Mat gray;
+    Mat binary;
+    Mat dst;
+    Mat cedge;
+    Mat edge1; 
+
+    Mat mBlur; 
+    
+    Mat channel[3];
+    ofstream myfile;
+    char buffer[100];
+    try {
+        srand(time(NULL));
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        myfile.open(LINES_FILENAME);
+        cedge.create(src.size(), src.type());
+        int cols = src.cols;
+        int rows = src.rows;
+
+        cout << "Rows : " << rows << " Cols: " << cols << endl; 
+
+        int start = 0;
+
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        blur(gray, mBlur, Size(3,3));
+        Canny(mBlur, edge1, 50, 50 * 3, 3);
+
+        vector<Vec4i> lines;
+        HoughLinesP(edge1, lines, 1, CV_PI/180, 40, 50, 10);
+        for (size_t i= 0; i < lines.size(); i++) {
+            Vec4i l = lines[i];
+            myfile << l[0] << "," << l[1] << "," << l[2] << "," << l[3] << endl;
+            // int rgb[] = {0,0,0};
+            // rgb[i%3] = 255;
+            // line(src, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(rgb[0], rgb[1], rgb[2]), 3 , LINE_AA);
+        } 
+
+        myfile.close();
+        imwrite(OUTPUT_STRING, src);
         return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
