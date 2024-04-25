@@ -13,10 +13,11 @@ extern "C" {
     int my_merge();
     int make_gray();
     int grab_cut();
+    int experiment();    
     int canny_edge(int edgeThresh);
     int hough_lines(int edgeThresh, double minTheta, double maxTheta);
     int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxLineGap);
-    int hough_circles();
+    int hough_circles(double dp, double param1, double param2, int minRadius, int maxRadius);
     int gaussian_blur(int mSize);
     void* easy_init();
     int load_image(void* container, char *filename, int color_mode);

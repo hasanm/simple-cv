@@ -41,6 +41,8 @@
 
 (cffi:defcfun "adaptive_threshold" :int)
 
+(cffi:defcfun "experiment" :int)
+
 (cffi:defcfun "copy_image" :int
   (filename :pointer))
 
@@ -105,7 +107,13 @@
   (m-size :int)
   (edge-thresh :int))
 
-(cffi:defcfun "hough_circles" :int)
+(cffi:defcfun "hough_circles" :int
+  (dp :double)
+  (param1 :double)
+  (param2 :double)
+  (min-radius :int)
+  (max-radius :int)    
+  )
 
 (defun get-minimap ()
   (cut-image 1250 1200 1750 1425)
@@ -186,7 +194,6 @@
            ))))
 ;; (load-image "/data/001233702.PNG")
 ;; (draw-rectangle 0 0 1000 500)
-(test 1)
 ;; (my-merge)
 ;; (canny-edge 50)
 ;; (hough-lines 60 10d0 (+ (/ pi 6) (/ pi 2)) pi)
@@ -221,6 +228,22 @@
                  ;; (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
                  (push (list x1 x2 y1 y2) lines))))
     lines))
+
+
+(defun load-circles ()
+  (let ((filename "/data/aoe_images/circles.txt")
+        (circles))
+    (with-open-file (in filename)
+      (loop for line = (read-line in nil)
+            while line
+            do (let* ((my-line (remove #\Return line))
+                     (points (mapcar #'parse-integer (cl-ppcre:split "," my-line)))
+                      (x (nth 0 points))
+                      (y (nth 1 points))
+                      (r (nth 2 points)))
+                 ;; (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
+                 (push (list x y r) circles))))
+    circles))
 
 
 (defun load-rhos ()
@@ -275,8 +298,11 @@
              (draw-lines handle))))))
 
 ;; (find-contours 101 40)
-(hough-circles)
-(sb-ext:exit)
+(test 1)
+;; (experiment)
 
+;; (hough-circles 1.5d0 100d0 50d0 30 100)
 
+;; (format t "~a~%" (sort (load-circles) #'< :key #'first))  
+;; (sb-ext:exit)
 

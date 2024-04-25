@@ -19,6 +19,7 @@ static const char INPUT_STRING[] = "/data/aoe_images/my.png";
 static const char OUTPUT_STRING[] = "/data/aoe_images/out.png";
 static const char LINES_FILENAME[] = "/data/aoe_images/lines.txt";
 static const char RHOS_FILENAME[] = "/data/aoe_images/rhos.txt";
+static const char CIRCLES_FILENAME[] = "/data/aoe_images/circles.txt";
 
 int copy_image(char *filename)
 {
@@ -352,26 +353,70 @@ int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxL
     return 0;
 }
 
-
-int hough_circles()
+// 1.5, 100, 50, 30 , 100
+int hough_circles_backup(double dp, double param1, double param2, int minRadius, int maxRadius)
 {
     Mat src;
     Mat gray; 
     Mat dst;
+    char buffer[100];
+    ofstream myfile; 
     try {
         src = imread(INPUT_STRING, IMREAD_COLOR);
         cvtColor(src, gray, COLOR_BGR2GRAY);
         medianBlur(gray, gray, 5);
         vector <Vec3f> circles;
-        HoughCircles (gray, circles, HOUGH_GRADIENT, 1, gray.rows/16, 100, 30, 1, 30);
+        HoughCircles (gray, circles, HOUGH_GRADIENT, 1.5, gray.rows/16, param1, param2, minRadius, maxRadius);
+        myfile.open(CIRCLES_FILENAME);
         for (size_t i = 0; i < circles.size() ; i++) {
             Vec3i c = circles[i];
             Point center = Point(c[0], c[1]);
             circle (src, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
             int radius = c[2];
             circle (src, center, radius, Scalar(255, 0, 255), 3, LINE_AA);
+            sprintf(buffer , "%d, %d => %d" , c[0], c[1], radius);
+            string str(buffer);
+            putText(src, str, center, FONT_HERSHEY_SIMPLEX , 1.5, Scalar(255, 0 , 255), 2);
+            myfile << c[0] << "," << c[1] << "," << c[2] << endl; 
         } 
-        
+        myfile.close();
+        imwrite(OUTPUT_STRING, src);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+int hough_circles(double dp, double param1, double param2, int minRadius, int maxRadius)
+{
+    Mat src;
+    Mat gray; 
+    Mat dst;
+    char buffer[100];
+    ofstream myfile; 
+    try {
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+        medianBlur(gray, gray, 5);
+        vector <Vec3f> circles;
+        HoughCircles (gray, circles, HOUGH_GRADIENT, 1.5, gray.rows/16, param1, param2, minRadius, maxRadius);
+        myfile.open(CIRCLES_FILENAME);
+        for (size_t i = 0; i < circles.size() ; i++) {
+            Vec3i c = circles[i];
+            Point center = Point(c[0], c[1]);
+            circle (src, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
+            int radius = c[2];
+            circle (src, center, radius, Scalar(255, 0, 255), 3, LINE_AA);
+            sprintf(buffer , "%d, %d => %d" , c[0], c[1], radius);
+            string str(buffer);
+            putText(src, str, center, FONT_HERSHEY_SIMPLEX , 1.5, Scalar(255, 0 , 255), 2);
+            myfile << c[0] << "," << c[1] << "," << c[2] << endl; 
+        } 
+        myfile.close();
         imwrite(OUTPUT_STRING, src);
         return 0;
     } catch (cv::Exception e) {
@@ -544,6 +589,87 @@ int find_contours (int mSize, int edgeThresh)
         return -1;
     }
 }
+
+
+int experiment()
+{
+    Mat src;
+    Mat gray;
+    Mat binary; 
+    Mat dst;
+    Mat blur;
+    Mat channel[3];
+    ofstream myfile; 
+    try {
+        src = imread(INPUT_STRING, IMREAD_COLOR);
+        int width = src.cols;
+        int height = src.rows;
+
+        int start = 0;
+        
+
+        int target_width = width / 4 - 1;
+        int target_height = height / 4 -1 ;
+
+
+        Mat newImg(src, Rect (start,start,target_width, target_height));
+        
+        cvtColor(newImg, gray, COLOR_BGR2GRAY);
+
+
+        medianBlur(gray, blur, 7);
+        threshold(blur, binary, 40, 255, THRESH_BINARY | THRESH_OTSU);
+
+        cout << "Dimension : "  << binary.rows << "x" << binary.cols << endl;
+        cout << "Channels : "   << binary.channels() << endl;
+        cout << "Elemsize : "   << binary.elemSize() << endl;        
+        
+        long count = 10;
+        int found = 0;
+        int found_idy = 0; 
+        for (int i = 0; i < min(target_height, target_width); i++) {
+            uchar elem = binary.at<uchar>(i,i);
+            if (elem > 0) {
+                count--;
+                if (count < 0) {
+                    found = 1;
+                    found_idy = i;
+                    break; 
+                } 
+            }
+        }
+
+        count = 10;
+        found = 0;
+        int found_idx = 0;
+        for (int j= found_idy; j >= 0; j--) {
+            uchar elem = binary.at<uchar>(found_idy * 2,j);
+            if (elem  == 0) {
+                count--;
+
+                if (count < 0) {
+                    found = 1;
+                    found_idx = j; 
+                } 
+            } 
+        } 
+
+        if (found == 1) {
+            Mat dst(src, Rect(found_idx, found_idy, width - found_idx - 1, height - found_idy - 1));
+            imwrite(OUTPUT_STRING, dst);
+            return 0; 
+        } 
+
+        imwrite(OUTPUT_STRING, binary);
+        return 0;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
 
 
 // Driver code
