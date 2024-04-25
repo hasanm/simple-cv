@@ -6,9 +6,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <fstream> 
+#include <fstream>
 #include <map>
-#include <vector> 
+#include <vector>
 #include "simple.h"
 #include "MyContainer.h"
 
@@ -276,7 +276,7 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
     Mat src;
     Mat dst;
     Mat cdst;
-    ofstream myfile; 
+    ofstream myfile;
     try {
         srand(time(NULL));
         src = imread(INPUT_STRING, IMREAD_GRAYSCALE);
@@ -290,7 +290,7 @@ int hough_lines(int edgeThresh, double minTheta, double maxTheta)
         for (size_t i= 0; i < lines.size(); i++){
 
             float rho = lines[i][0], theta = lines[i][1];
-            myfile << rho << "," << theta << endl; 
+            myfile << rho << "," << theta << endl;
             // cout << i << ": (" << rho << "," << theta << ")" << endl;
             Point pt1, pt2;
             double a = cos(theta), b = sin(theta);
@@ -318,7 +318,7 @@ int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxL
     Mat src;
     Mat dst;
     Mat cdstP;
-    ofstream myfile; 
+    ofstream myfile;
     try {
         srand(time(NULL));
         src = imread(INPUT_STRING, IMREAD_GRAYSCALE);
@@ -331,7 +331,7 @@ int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxL
         for (size_t i = 0; i < linesP.size(); i++) {
             Vec4i l = linesP[i];
             // cout << i << ": (" << l[0] << "," << l[1] << "), (" << l[2] << "," << l[3] << ")" << endl;
-            myfile << l[0] << "," << l[1] << "," << l[2] << "," << l[3] << endl; 
+            myfile << l[0] << "," << l[1] << "," << l[2] << "," << l[3] << endl;
             int rgb[] = {0,0,0};
             rgb[i%3] = 255;
 
@@ -357,10 +357,10 @@ int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxL
 int hough_circles_backup(double dp, double param1, double param2, int minRadius, int maxRadius)
 {
     Mat src;
-    Mat gray; 
+    Mat gray;
     Mat dst;
     char buffer[100];
-    ofstream myfile; 
+    ofstream myfile;
     try {
         src = imread(INPUT_STRING, IMREAD_COLOR);
         cvtColor(src, gray, COLOR_BGR2GRAY);
@@ -377,8 +377,8 @@ int hough_circles_backup(double dp, double param1, double param2, int minRadius,
             sprintf(buffer , "%d, %d => %d" , c[0], c[1], radius);
             string str(buffer);
             putText(src, str, center, FONT_HERSHEY_SIMPLEX , 1.5, Scalar(255, 0 , 255), 2);
-            myfile << c[0] << "," << c[1] << "," << c[2] << endl; 
-        } 
+            myfile << c[0] << "," << c[1] << "," << c[2] << endl;
+        }
         myfile.close();
         imwrite(OUTPUT_STRING, src);
         return 0;
@@ -394,10 +394,10 @@ int hough_circles_backup(double dp, double param1, double param2, int minRadius,
 int hough_circles(double dp, double param1, double param2, int minRadius, int maxRadius)
 {
     Mat src;
-    Mat gray; 
+    Mat gray;
     Mat dst;
     char buffer[100];
-    ofstream myfile; 
+    ofstream myfile;
     try {
         src = imread(INPUT_STRING, IMREAD_COLOR);
         cvtColor(src, gray, COLOR_BGR2GRAY);
@@ -414,8 +414,8 @@ int hough_circles(double dp, double param1, double param2, int minRadius, int ma
             sprintf(buffer , "%d, %d => %d" , c[0], c[1], radius);
             string str(buffer);
             putText(src, str, center, FONT_HERSHEY_SIMPLEX , 1.5, Scalar(255, 0 , 255), 2);
-            myfile << c[0] << "," << c[1] << "," << c[2] << endl; 
-        } 
+            myfile << c[0] << "," << c[1] << "," << c[2] << endl;
+        }
         myfile.close();
         imwrite(OUTPUT_STRING, src);
         return 0;
@@ -451,8 +451,8 @@ int gaussian_blur(int mSize)
 }
 
 void* easy_init () {
-    MyContainer* c = new MyContainer; 
-    return c; 
+    MyContainer* c = new MyContainer;
+    return c;
 }
 
 int load_image(void* ptr, char* filename, int color_mode)
@@ -487,7 +487,7 @@ int push_line(void* ptr, int x1, int x2, int y1, int y2)
 int draw_lines(void* ptr)
 {
     Mat src;
-    Mat dst; 
+    Mat dst;
     try {
         MyContainer* c = static_cast<MyContainer*> (ptr);
         vector<Vec4i> lines = c->get_lines();
@@ -495,8 +495,8 @@ int draw_lines(void* ptr)
         for (int i=0; i < lines.size(); i++) {
             line(src, Point(lines[i][0], lines [i][1]), Point(lines[i][2], lines [i][3]),
                  Scalar(255,0,0), 3 , LINE_AA);
-                 
-        } 
+
+        }
         imwrite(OUTPUT_STRING, src);
         return 0;
     } catch (cv::Exception e) {
@@ -513,7 +513,7 @@ int new_lines(void* ptr)
     try {
         MyContainer* c = static_cast<MyContainer*> (ptr);
         c->new_lines();
-        return 0; 
+        return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
         cerr << e.what();
@@ -531,17 +531,17 @@ int find_contours (int mSize, int edgeThresh)
     Mat cedge;
     Mat gray;
 
-    vector <vector<Point> > contours; 
+    vector <vector<Point> > contours;
     vector< vector<Point> > contours0;
 
-    vector <vector<Point> > final_contours; 
+    vector <vector<Point> > final_contours;
     vector<Vec4i> hierarchy;
 
     int max_idx = -1;
-    float max_area = 0; 
+    float max_area = 0;
 
     int max_binary_value = 255;
-    double area; 
+    double area;
 
     try {
         src = imread(INPUT_STRING, IMREAD_COLOR);
@@ -551,7 +551,7 @@ int find_contours (int mSize, int edgeThresh)
         Canny(mBlur, edge1, edgeThresh, edgeThresh*3, 3);
 
         src.copyTo(cedge, edge1);
-        
+
         findContours(edge1, contours0, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
 
         contours.resize(contours0.size());
@@ -564,9 +564,9 @@ int find_contours (int mSize, int edgeThresh)
 
             if (area > 1000) {
                  // cout << k << " : "  << contours[k] << " ," <<  area << ", " << hierarchy[k] << endl;
-                cout << area << "," << k << endl; 
-            } 
-        } 
+                cout << area << "," << k << endl;
+            }
+        }
 
 
         Mat cnt_img = Mat::zeros(src.rows, src.cols, CV_8UC3);
@@ -578,7 +578,7 @@ int find_contours (int mSize, int edgeThresh)
         }
 
         // drawContours(cnt_img, contours, -1, Scalar(128, 255,255),3, LINE_AA, hierarchy);
-        
+
         imwrite(OUTPUT_STRING, cnt_img);
 
 
@@ -595,25 +595,25 @@ int experiment()
 {
     Mat src;
     Mat gray;
-    Mat binary; 
+    Mat binary;
     Mat dst;
     Mat blur;
     Mat channel[3];
-    ofstream myfile; 
+    ofstream myfile;
     try {
         src = imread(INPUT_STRING, IMREAD_COLOR);
         int width = src.cols;
         int height = src.rows;
 
         int start = 0;
-        
+
 
         int target_width = width / 4 - 1;
         int target_height = height / 4 -1 ;
 
 
         Mat newImg(src, Rect (start,start,target_width, target_height));
-        
+
         cvtColor(newImg, gray, COLOR_BGR2GRAY);
 
 
@@ -622,11 +622,11 @@ int experiment()
 
         cout << "Dimension : "  << binary.rows << "x" << binary.cols << endl;
         cout << "Channels : "   << binary.channels() << endl;
-        cout << "Elemsize : "   << binary.elemSize() << endl;        
-        
+        cout << "Elemsize : "   << binary.elemSize() << endl;
+
         long count = 10;
         int found = 0;
-        int found_idy = 0; 
+        int found_idy = 0;
         for (int i = 0; i < min(target_height, target_width); i++) {
             uchar elem = binary.at<uchar>(i,i);
             if (elem > 0) {
@@ -634,8 +634,8 @@ int experiment()
                 if (count < 0) {
                     found = 1;
                     found_idy = i;
-                    break; 
-                } 
+                    break;
+                }
             }
         }
 
@@ -649,16 +649,16 @@ int experiment()
 
                 if (count < 0) {
                     found = 1;
-                    found_idx = j; 
-                } 
-            } 
-        } 
+                    found_idx = j;
+                }
+            }
+        }
 
         if (found == 1) {
             Mat dst(src, Rect(found_idx, found_idy, width - found_idx - 1, height - found_idy - 1));
             imwrite(OUTPUT_STRING, dst);
-            return 0; 
-        } 
+            return 0;
+        }
 
         imwrite(OUTPUT_STRING, binary);
         return 0;

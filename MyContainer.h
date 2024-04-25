@@ -20,7 +20,7 @@ class MyContainer {
  private:
     vector<Mat> store;
     vector<Vec4i> lines;
-    int current_index; 
-}; 
+    int current_index;
+};
 
 #endif
