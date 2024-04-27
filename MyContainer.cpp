@@ -22,13 +22,13 @@ int MyContainer::new_lines() {
     return 0;
 }
 
-int MyContainer::push_line(int x1, int x2, int y1, int y2) {
-    Vec4i v(x1, x2, y1, y2);
+int MyContainer::push_line(int x1, int x2, int y1, int y2, int r, int g, int b) {
+    Vec8i v(x1, x2, y1, y2, r, g, b, 0);
     lines.push_back(v);
     return 0;
 }
 
-vector<Vec4i> MyContainer::get_lines() {
+vector<Vec8i> MyContainer::get_lines() {
     return lines;
 }
 

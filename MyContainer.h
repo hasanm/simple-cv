@@ -14,12 +14,12 @@ class MyContainer {
 
     int load_image(char* filename, int color_mode);
     int new_lines();
-    int push_line(int x1, int x2, int y1, int y2);
+    int push_line(int x1, int x2, int y1, int y2, int r, int g, int b);
     int push_image(Mat mat);
-    vector<Vec4i> get_lines();
+    vector<Vec8i> get_lines();
  private:
     vector<Mat> store;
-    vector<Vec4i> lines;
+    vector<Vec8i> lines;
     int current_index;
 };
 

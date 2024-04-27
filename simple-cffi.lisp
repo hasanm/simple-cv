@@ -10,6 +10,52 @@
 (defparameter *output* "/data/aoe_images/out.png")
 (defparameter *lines* "/data/aoe_images/lines.txt")
 (defparameter *rhos* "/data/aoe_images/rhos.txt")
+(defparameter *home-work-images* '(
+                           "/data/images/IMG_20221013_040208_1390.JPG"
+                           "/data/images/IMG_20221013_040217_1391.JPG"
+                           "/data/images/IMG_20221013_040225_1392.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1335.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1348.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1344.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1339.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1338.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1333.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1342.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1334.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1347.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1337.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1346.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1343.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1341.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1345.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1340.JPG"
+                           "/data/homeworks/math3600/hw1/IMG_1336.JPG"
+                           ))
+
+(defparameter *aoe-images* '(
+                           "/data/aoe_images/Screenshot 2022-04-10 14.23.17.png"
+                           "/data/aoe_images/Screenshot 2022-04-23 22.41.28.png"
+                           "/data/aoe_images/Screenshot 2022-05-07 17.15.09.png"
+                           "/data/aoe_images/Screenshot 2022-05-12 21.20.30.png"
+                           "/data/aoe_images/Screenshot 2022-06-16 13.56.17.png"
+                           "/data/aoe_images/Screenshot 2022-06-17 23.15.03.png"
+                           "/data/aoe_images/Screenshot 2022-08-31 02.12.46.png"
+                           "/data/aoe_images/Screenshot 2022-09-10 18.57.06.png"
+                           "/data/aoe_images/Screenshot 2022-09-18 03.02.22.png"
+                           "/data/aoe_images/Screenshot 2022-11-02 23.07.17.png"
+                           "/data/aoe_images/Screenshot 2022-11-11 14.14.09.png"
+                           "/data/aoe_images/Screenshot 2022-11-11 14.14.14.png"
+                           "/data/aoe_images/Screenshot 2022-11-11 14.14.40.png"
+                           "/data/aoe_images/Screenshot 2022-11-25 11.53.13.png"
+                           "/data/aoe_images/Screenshot 2022-12-16 05.27.13.png"
+                           "/data/aoe_images/Screenshot 2022-12-25 13.29.59.png"
+                           "/data/aoe_images/Screenshot 2023-01-01 21.09.53.png"
+                           "/data/aoe_images/Screenshot 2023-02-20 18.08.42.png"
+                           "/data/aoe_images/Screenshot 2023-02-22 13.35.17.png"
+                           "/data/aoe_images/Screenshot 2023-02-26 04.58.34.png"
+                           "/data/aoe_images/Screenshot 2023-03-07 22.48.50.png"                           
+
+                      ))
 
 (cffi:define-foreign-library libsimple
   (t (:default "libsimple")))
@@ -69,7 +115,11 @@
   (x1 :int)
   (x2 :int)
   (y1 :int)
-  (y2 :int))
+  (y2 :int)
+  (r :int)
+  (g :int)
+  (b :int)
+  )
 
 (cffi:defcfun "draw_lines" :int
   (handle my-container))
@@ -162,26 +212,8 @@
 
 
 (defun load-some-image (n)
-  (let ((image-filenames '(
-                           "/data/images/IMG_20221013_040208_1390.JPG"
-                           "/data/images/IMG_20221013_040217_1391.JPG"
-                           "/data/images/IMG_20221013_040225_1392.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1335.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1348.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1344.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1339.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1338.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1333.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1342.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1334.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1347.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1337.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1346.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1343.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1341.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1345.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1340.JPG"
-                           "/data/homeworks/math3600/hw1/IMG_1336.JPG"
+  (let ((image-filenames *home-work-images*)
+        (aoe-images '(
                            "/data/aoe_images/Screenshot 2022-04-10 14.23.17.png"
                            "/data/aoe_images/Screenshot 2022-04-23 22.41.28.png"
                            "/data/aoe_images/Screenshot 2022-05-07 17.15.09.png"
@@ -204,7 +236,8 @@
                            "/data/aoe_images/Screenshot 2023-02-26 04.58.34.png"
                            "/data/aoe_images/Screenshot 2023-03-07 22.48.50.png"                           
 
-                           )))
+                      ) )
+        )
     (unwind-protect
          (cffi:with-foreign-string (filename (nth n image-filenames))
            (copy-image filename)
@@ -314,7 +347,7 @@
                         (progn
                           ;; (format t "~a~%" line)
                           (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
-                          (push-line handle x1 x2 y1 y2))))
+                          (push-line handle x1 x2 y1 y2 255 0 0))))
              (draw-lines handle))))))
 
 ;; (find-contours 101 40)
@@ -378,11 +411,11 @@
 
 
 ;; (my-test 3)
-(load-some-image 3)
+
 ;; (experiment)
 ;; (grab-cut)
 ;; (hough-lines-p 40 50 50 10)
-(experiment)
+
 
 (defun process-lines () 
   (let ((handle (make-instance 'my-container)))
@@ -396,24 +429,36 @@
                              (x2 (nth 1 line))
                              (y1 (nth 2 line))
                              (y2 (nth 3 line))
-                             (diff-x (abs (- x1 x2)))
-                             (diff-y (abs (- y1 y2)))
+                             (diff-x (abs (- x1 y1)))
+                             (diff-y (abs (- x2 y2)))
                              (l
                                (sqrt
                                 (+ (expt diff-x 2)
                                    (expt diff-y 2)
                                    )))
-                             (slope (/ diff-y diff-x))
+                             
+                             (slope (if (= diff-x 0)
+                                        100000000000000
+                                        (/ diff-y diff-x)))
 
                              )
 
-                        (progn
-                          ;; (format t "~a~%" line)
-                          (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
-                          (push-line handle x1 x2 y1 y2))))
+                        (if (< diff-x 50)
+                            (let ()
+                              (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
+                              (push-line handle x1 0 y1 4031 0 0 255)
+                              ))))
              (draw-lines handle))))))
 
-;; (sb-ext:exit)
+(my-test 1)
+(if nil (loop for image-filename in *home-work-images*
+              for i from 0
+              do (let ()
+                   (my-test i)
+                   (save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))
+
+(sb-ext:exit)
+
 
 
 

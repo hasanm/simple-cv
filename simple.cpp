@@ -468,11 +468,11 @@ int load_image(void* ptr, char* filename, int color_mode)
 }
 
 
-int push_line(void* ptr, int x1, int x2, int y1, int y2)
+int push_line(void* ptr, int x1, int x2, int y1, int y2, int r, int g, int b)
 {
     try {
         MyContainer* c = static_cast<MyContainer*> (ptr);
-        c->push_line(x1, x2,  y1, y2);
+        c->push_line(x1, x2,  y1, y2, r, g, b);
         return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
@@ -489,11 +489,11 @@ int draw_lines(void* ptr)
     Mat dst;
     try {
         MyContainer* c = static_cast<MyContainer*> (ptr);
-        vector<Vec4i> lines = c->get_lines();
+        vector<Vec8i> lines = c->get_lines();
         src = imread(INPUT_STRING, IMREAD_COLOR);
         for (int i=0; i < lines.size(); i++) {
             line(src, Point(lines[i][0], lines [i][1]), Point(lines[i][2], lines [i][3]),
-                 Scalar(255,0,0), 3 , LINE_AA);
+                 Scalar(lines[i][4],lines[i][5],lines[i][6]), 3 , LINE_AA);
 
         }
         imwrite(OUTPUT_STRING, src);
