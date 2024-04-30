@@ -450,13 +450,15 @@
                               ))))
              (draw-lines handle))))))
 
+(defun another-test ()
+  (let ()
+    (my-test 1)
+    (if nil (loop for image-filename in *home-work-images*
+                  for i from 0
+                  do (let ()
+                       (my-test i)
+                       (save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))))
 (my-test 1)
-(if nil (loop for image-filename in *home-work-images*
-              for i from 0
-              do (let ()
-                   (my-test i)
-                   (save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))
-
 (sb-ext:exit)
 
 
