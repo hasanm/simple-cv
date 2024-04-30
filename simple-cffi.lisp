@@ -85,7 +85,6 @@
   (slot-value handle 'pointer))
 
 
-(cffi:defcfun "adaptive_threshold" :int)
 
 (cffi:defcfun "experiment" :int)
 
@@ -136,7 +135,8 @@
   (q :int))
 
 
-(cffi:defcfun "adaptive_threshold" :int)
+(cffi:defcfun "adaptive_threshold" :pointer
+  (handle my-container))
 (cffi:defcfun "my_merge" :int)
 (cffi:defcfun "make_gray" :int)
 (cffi:defcfun "grab_cut" :int)
@@ -450,21 +450,23 @@
                        (my-test i)
                        (my-save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))))
 
+(defun pr (ptr)
+  (let ((result (make-instance 'my-container)))
+    (setf (slot-value result 'pointer) ptr)
+    result))
+
 (defun my-load-image (filename)
-  (let ((handle (make-instance 'my-container))
-        (result (make-instance 'my-container)))
+  (let ((handle (make-instance 'my-container)))
     (unwind-protect
          (cffi:with-foreign-string (out *output*)
-          (cffi:with-foreign-string (f filename)
-            (let ()
-              (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))
-              (setf (slot-value result 'pointer )
-                    (get-minimap handle))
-              (save-image result out)))))))
+           (cffi:with-foreign-string (f filename)
+             (let ()
+               (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))
+               (save-image (pr (adaptive-threshold handle)) out)))))))
 
-(my-load-image (nth  1 *aoe-images*))
+(my-load-image (nth  2 *home-work-images*))
 
-;; (sb-ext:exit)
+(sb-ext:exit)
 
 
 

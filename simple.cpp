@@ -162,68 +162,7 @@ int grab_cut()
     return 0;
 }
 
-int adaptive_threshold ()
-{
-    Mat src;
-    Mat dst;
-    Mat src_gray;
-    Mat mDil;
-    Mat mBlur;
-    Mat mDiff;
-    Mat merged;
-    Mat mNorm;
-    Mat mNormalized;
-    Mat out;
 
-    Mat channel[3];
-
-    int max_binary_value = 255;
-
-    try {
-        src = imread(INPUT_STRING, IMREAD_COLOR);
-        cout << "Dimension : "  << src.rows << "x" << src.cols << endl;
-        cout << "Channels : "   << src.channels() << endl;
-        merged.create(src.size(), src.type());
-
-        split(src, channel);
-
-
-        for (int i =0 ; i< 3; i++) {
-            dilate(channel[i], mDil, Mat::ones(7,7, CV_8UC1), Point(-1, -1));
-            medianBlur(mDil, mBlur, 21);
-            absdiff(channel[i], mBlur, mDiff);
-            absdiff(255, mDiff, mDiff);
-            normalize(mDiff, mNorm, 0, 255, NORM_MINMAX, CV_8UC1);
-            insertChannel(mNorm, merged, i);
-        }
-
-        cvtColor(merged, src_gray, COLOR_BGR2GRAY);
-
-        dst.create(src_gray.size(), src_gray.type());
-
-        fastNlMeansDenoising(src_gray, dst, 3, 7, 21);
-
-        int blockSize = 501;
-        int x1, y1 = 100;
-        int x2 = x1 + blockSize;
-        int y2 = y1 + blockSize;
-
-        adaptiveThreshold(dst, dst, max_binary_value, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, blockSize, 2);
-
-
-        blur(dst, dst, Size(3,3));
-        dilate(dst,dst, Mat() , Point(-1, -1), 2);
-        erode(dst,dst, Mat() , Point(-1, -1), 2);
-
-        imwrite(OUTPUT_STRING, dst);
-
-
-        return 0;
-    } catch (cv::Exception e) {
-        cout << "Caught Exception " << endl;
-        return -1;
-    }
-}
 
 
 int canny_edge(int edgeThresh)
@@ -476,6 +415,64 @@ int save_image(void* ptr, char* filename)
         return -1;
     }
     return 0;
+}
+
+void* adaptive_threshold (void* ptr)
+{
+    Mat dst;
+    Mat src_gray;
+    Mat mDil;
+    Mat mBlur;
+    Mat mDiff;
+    Mat merged;
+    Mat mNorm;
+    Mat mNormalized;
+    Mat out;
+
+    Mat channel[3];
+
+    int max_binary_value = 255;
+
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+
+        merged.create(c->mat.size(), c->mat.type());
+
+        split(c->mat, channel);
+
+
+        for (int i =0 ; i< 3; i++) {
+            dilate(channel[i], mDil, Mat::ones(7,7, CV_8UC1), Point(-1, -1));
+            medianBlur(mDil, mBlur, 21);
+            absdiff(channel[i], mBlur, mDiff);
+            absdiff(255, mDiff, mDiff);
+            normalize(mDiff, mNorm, 0, 255, NORM_MINMAX, CV_8UC1);
+            insertChannel(mNorm, merged, i);
+        }
+
+        cvtColor(merged, src_gray, COLOR_BGR2GRAY);
+        dst.create(src_gray.size(), src_gray.type());
+
+        fastNlMeansDenoising(src_gray, dst, 3, 7, 21);
+
+        int blockSize = 501;
+        int x1, y1 = 100;
+        int x2 = x1 + blockSize;
+        int y2 = y1 + blockSize;
+
+        adaptiveThreshold(dst, dst, max_binary_value, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, blockSize, 2);
+
+
+        blur(dst, dst, Size(3,3));
+        dilate(dst,dst, Mat() , Point(-1, -1), 2);
+        erode(dst,dst, Mat() , Point(-1, -1), 2);
+
+        MyContainer *output = new MyContainer(dst);
+        return output;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        return nullptr;
+    }
 }
 
 
