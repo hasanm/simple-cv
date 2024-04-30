@@ -95,7 +95,8 @@
 (cffi:defcfun "paste_image" :int
   (filename :pointer))
 
-(cffi:defcfun "cut_image" :int
+(cffi:defcfun "cut_image" :pointer
+  (handle my-container)
   (x :int)
   (y :int)
   (p :int)
@@ -105,6 +106,10 @@
   (handle my-container)
   (filename :pointer)
   (read-mode :int))
+
+(cffi:defcfun "save_image" :int
+  (handle my-container)
+  (filename :pointer))
 
 
 (cffi:defcfun "new_lines" :int
@@ -204,7 +209,7 @@
          (cffi:with-foreign-string (filename *output*)
            (copy-image filename)))))
 
-(defun save-image (filename)
+(defun my-save-image (filename)
   (unwind-protect
        (cffi:with-foreign-string (f filename)
          (paste-image f)))  
@@ -259,11 +264,18 @@
 ;; (sb-ext:exit)
 
 (defun my-load-image (filename)
-  (let ((handle (make-instance 'my-container)))
+  (let ((handle (make-instance 'my-container))
+        (result (make-instance 'my-container)))
     (unwind-protect
-         (cffi:with-foreign-string (f filename)
-           (loop for i from 1 to 10
-                 do (format t "~a: ~a~%" i (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))))))))
+         (cffi:with-foreign-string (out *output*)
+          (cffi:with-foreign-string (f filename)
+            (let ()
+              (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))
+              (setf (slot-value result 'pointer )
+                    (cut-image handle 1250 1200 1750 1425))
+              (save-image result out)
+              ))))))
+
 
 (defun load-lines ()
   (let ((filename "/data/aoe_images/lines.txt")
@@ -272,13 +284,11 @@
       (loop for line = (read-line in nil)
             while line
             do (let* ((my-line (remove #\Return line))
-                     (points (mapcar #'parse-integer (cl-ppcre:split "," my-line)))
+                      (points (mapcar #'parse-integer (cl-ppcre:split "," my-line)))
                       (x1 (nth 0 points))
                       (x2 (nth 1 points))
                       (y1 (nth 2 points))
-                      (y2 (nth 3 points))
-                      (slope (abs (/ (- y1 y2) (- x1 x2)))))
-                 ;; (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
+                      (y2 (nth 3 points)))
                  (push (list x1 x2 y1 y2) lines))))
     lines))
 
@@ -294,7 +304,6 @@
                       (x (nth 0 points))
                       (y (nth 1 points))
                       (r (nth 2 points)))
-                 ;; (format t "~10d|~10d|~10d|~10d| ~10,3f~%" x1 x2 y1 y2 slope)
                  (push (list x y r) circles))))
     circles))
 
@@ -314,7 +323,7 @@
     lines))
 
 
-(defun my-load-image (index) 
+(defun my-load-image-with-index (index) 
   (let ((image-filenames '(
                            "/data/images/IMG_20221013_040208_1390.JPG"
                            "/data/images/IMG_20221013_040217_1391.JPG"
@@ -339,10 +348,7 @@
                                (sqrt
                                 (+ (expt diff-x 2)
                                    (expt diff-y 2)
-                                   )))
-                             (slope (/ diff-y diff-x))
-
-                             )
+                                   ))))
 
                         (progn
                           ;; (format t "~a~%" line)
@@ -437,15 +443,11 @@
                                    (expt diff-y 2)
                                    )))
                              
-                             (slope (if (= diff-x 0)
-                                        100000000000000
-                                        (/ diff-y diff-x)))
-
                              )
 
                         (if (< diff-x 50)
                             (let ()
-                              (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
+                              ;; (format t "~3d ~10d|~10d|~10d|~10d|~10d|~10d|~10,3f|~10,3f~%" i x1 x2 y1 y2 diff-x diff-y slope l )
                               (push-line handle x1 0 y1 4031 0 0 255)
                               ))))
              (draw-lines handle))))))
@@ -457,9 +459,13 @@
                   for i from 0
                   do (let ()
                        (my-test i)
-                       (save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))))
-(my-test 1)
+                       (my-save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))))
+
+(my-load-image (nth  1 *aoe-images*))
+
 (sb-ext:exit)
+
+
 
 
 

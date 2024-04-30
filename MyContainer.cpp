@@ -7,6 +7,11 @@ MyContainer::MyContainer() {
     
 }
 
+MyContainer::MyContainer(Mat m)
+    :mat (m)
+{
+} 
+
 MyContainer::~MyContainer() {
 }
 

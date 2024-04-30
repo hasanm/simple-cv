@@ -5,7 +5,6 @@
 extern "C" {
 #endif
     char* get_machine();
-    int cut_image(int x, int y, int p, int q);
     int draw_rectangle(int x, int y, int p, int q);
     int copy_image(char *filename);
     int paste_image(char *filename);
@@ -20,6 +19,8 @@ extern "C" {
     int hough_circles(double dp, double param1, double param2, int minRadius, int maxRadius);
     int gaussian_blur(int mSize);
     void* easy_init();
+    void* cut_image(void* container, int x, int y, int p, int q);
+    int save_image(void* container, char *filename);
     int load_image(void* container, char *filename, int color_mode);
     int new_lines(void* container);
     int push_line(void* container, int x1, int x2, int y1, int y2, int r, int g, int b);

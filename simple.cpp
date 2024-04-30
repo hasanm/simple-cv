@@ -51,24 +51,6 @@ int paste_image(char *filename)
     }
 }
 
-
-int cut_image(int x, int y, int p, int q)
-{
-    Mat mat;
-    try {
-    mat = imread("/data/aoe_images/my.png", IMREAD_COLOR);
-    Mat dst = mat(Rect(Point(x,y), Point(p,q)));
-    imwrite("/data/aoe_images/out.png", dst);
-    return 0;
-    } catch (cv::Exception e) {
-        cout << "Caught Exception " << endl;
-        cerr << e.what();        
-        return -1;
-    }
-}
-
-
-
 int  draw_rectangle(int x, int y, int p, int q)
 {
     Mat mat;
@@ -459,6 +441,35 @@ int load_image(void* ptr, char* filename, int color_mode)
     try {
         MyContainer* c = static_cast<MyContainer*> (ptr);
         return c->load_image(filename, color_mode);
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return -1;
+    }
+    return 0;
+}
+
+
+void* cut_image(void* ptr, int x, int y, int p, int q)
+{
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+        Mat dst = c->mat(Rect(Point(x,y), Point(p,q)));
+        MyContainer *output = new MyContainer(dst);
+        return output;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();        
+        return nullptr;
+    }
+}
+
+int save_image(void* ptr, char* filename)
+{
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);
+        imwrite(filename, c->mat);
+        return 0;
     } catch (cv::Exception e) {
         cout << "Caught Exception " << endl;
         cerr << e.what();
