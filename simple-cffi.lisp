@@ -172,34 +172,34 @@
 
 (cffi:defcfun "find_inside" :int)
 
-(defun get-minimap ()
-  (cut-image 1250 1200 1750 1425)
+(defun get-minimap (handle)
+  (cut-image handle 1250 1200 1750 1425)
   )
 
-(defun get-wood ()
+(defun get-wood (handle)
   (let ((x 10))
-   (cut-image x 10 (+ x 135) 70))
+   (cut-image handle x 10 (+ x 135) 70))
   )
 
-(defun get-food ()
+(defun get-food (handle)
   (let ((x 145))
-   (cut-image x 10 (+ x 135) 70))
+   (cut-image handle x 10 (+ x 135) 70))
   )
 
-(defun get-gold ()
+(defun get-gold (handle)
   (let ((x 280))
-   (cut-image x 10 (+ x 135) 70))
+   (cut-image handle x 10 (+ x 135) 70))
   )
 
-(defun get-stone ()
+(defun get-stone (handle)
   (let ((x 420))
-   (cut-image x 10 (+ x 135) 70))
+   (cut-image handle x 10 (+ x 135) 70))
   )
 
 
-(defun get-vills ()
+(defun get-vills (handle )
   (let ((x 540))
-   (cut-image x 10 (+ x 210) 70))
+   (cut-image handle x 10 (+ x 210) 70))
   )
 
 
@@ -263,18 +263,7 @@
 ;; (adaptive-threshold)
 ;; (sb-ext:exit)
 
-(defun my-load-image (filename)
-  (let ((handle (make-instance 'my-container))
-        (result (make-instance 'my-container)))
-    (unwind-protect
-         (cffi:with-foreign-string (out *output*)
-          (cffi:with-foreign-string (f filename)
-            (let ()
-              (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))
-              (setf (slot-value result 'pointer )
-                    (cut-image handle 1250 1200 1750 1425))
-              (save-image result out)
-              ))))))
+
 
 
 (defun load-lines ()
@@ -461,9 +450,22 @@
                        (my-test i)
                        (my-save-image (concatenate 'string "/data/image_outputs/" (write-to-string (+ i 1)) ".JPG")))))))
 
+(defun my-load-image (filename)
+  (let ((handle (make-instance 'my-container))
+        (result (make-instance 'my-container)))
+    (unwind-protect
+         (cffi:with-foreign-string (out *output*)
+          (cffi:with-foreign-string (f filename)
+            (let ()
+              (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))
+              (setf (slot-value result 'pointer )
+                    (get-minimap handle))
+              (save-image result out)))))))
+
 (my-load-image (nth  1 *aoe-images*))
 
-(sb-ext:exit)
+;; (sb-ext:exit)
+
 
 
 

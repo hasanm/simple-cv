@@ -18,6 +18,8 @@ extern "C" {
     int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxLineGap);
     int hough_circles(double dp, double param1, double param2, int minRadius, int maxRadius);
     int gaussian_blur(int mSize);
+
+
     void* easy_init();
     void* cut_image(void* container, int x, int y, int p, int q);
     int save_image(void* container, char *filename);
