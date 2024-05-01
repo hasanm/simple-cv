@@ -53,8 +53,7 @@
                            "/data/aoe_images/Screenshot 2023-02-20 18.08.42.png"
                            "/data/aoe_images/Screenshot 2023-02-22 13.35.17.png"
                            "/data/aoe_images/Screenshot 2023-02-26 04.58.34.png"
-                           "/data/aoe_images/Screenshot 2023-03-07 22.48.50.png"                           
-
+                           "/data/aoe_images/Screenshot 2023-03-07 22.48.50.png"
                       ))
 
 (cffi:define-foreign-library libsimple
@@ -70,6 +69,7 @@
   :IMREAD_COLOR)
 
 (cffi:defcfun "easy_init" :pointer)
+(cffi:defctype return-pointer :pointer)
 
 (defclass my-container ()
   ((pointer :initform (easy-init)
@@ -82,8 +82,17 @@
   (:actual-type :pointer)
   (:simple-parser my-container))
 
+(cffi:define-foreign-type return-pointer-type ()
+  ()
+  (:actual-type :pointer)
+  (:simple-parser return-pointer ))
+
 (defmethod cffi:translate-to-foreign (handle (type my-container-type))
   (slot-value handle 'pointer))
+
+
+(defmethod cffi:translate-from-foreign (ptr (type return-pointer-type))
+  (make-instance 'my-container :pointer ptr))
 
 
 
@@ -136,7 +145,7 @@
   (q :int))
 
 
-(cffi:defcfun "adaptive_threshold" :pointer
+(cffi:defcfun "adaptive_threshold" return-pointer
   (handle my-container))
 (cffi:defcfun "my_merge" :int)
 (cffi:defcfun "make_gray" :int)
@@ -463,9 +472,12 @@
            (cffi:with-foreign-string (f filename)
              (let ()
                (load-image handle f (cffi:foreign-enum-value 'imread-modes :IMREAD_COLOR))
-               (save-image (pr (adaptive-threshold handle)) out)))))))
+               (save-image (adaptive-threshold handle) out)
+               ;; (adaptive-threshold handle)
+               ))))))
 
-(my-load-image (nth  2 *home-work-images*))
+(my-load-image (nth  0 *home-work-images*))
+
 
 (sb-ext:exit)
 
