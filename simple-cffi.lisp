@@ -94,6 +94,9 @@
 (defmethod cffi:translate-from-foreign (ptr (type return-pointer-type))
   (make-instance 'my-container :pointer ptr))
 
+(defmethod cffi:translate-from-foreign (ptr (type my-container-type))
+  (make-instance 'my-container :pointer ptr))
+
 
 
 (cffi:defcfun "experiment" :int)
@@ -228,30 +231,6 @@
 
 (defun load-some-image (n)
   (let ((image-filenames *home-work-images*)
-        (aoe-images '(
-                           "/data/aoe_images/Screenshot 2022-04-10 14.23.17.png"
-                           "/data/aoe_images/Screenshot 2022-04-23 22.41.28.png"
-                           "/data/aoe_images/Screenshot 2022-05-07 17.15.09.png"
-                           "/data/aoe_images/Screenshot 2022-05-12 21.20.30.png"
-                           "/data/aoe_images/Screenshot 2022-06-16 13.56.17.png"
-                           "/data/aoe_images/Screenshot 2022-06-17 23.15.03.png"
-                           "/data/aoe_images/Screenshot 2022-08-31 02.12.46.png"
-                           "/data/aoe_images/Screenshot 2022-09-10 18.57.06.png"
-                           "/data/aoe_images/Screenshot 2022-09-18 03.02.22.png"
-                           "/data/aoe_images/Screenshot 2022-11-02 23.07.17.png"
-                           "/data/aoe_images/Screenshot 2022-11-11 14.14.09.png"
-                           "/data/aoe_images/Screenshot 2022-11-11 14.14.14.png"
-                           "/data/aoe_images/Screenshot 2022-11-11 14.14.40.png"
-                           "/data/aoe_images/Screenshot 2022-11-25 11.53.13.png"
-                           "/data/aoe_images/Screenshot 2022-12-16 05.27.13.png"
-                           "/data/aoe_images/Screenshot 2022-12-25 13.29.59.png"
-                           "/data/aoe_images/Screenshot 2023-01-01 21.09.53.png"
-                           "/data/aoe_images/Screenshot 2023-02-20 18.08.42.png"
-                           "/data/aoe_images/Screenshot 2023-02-22 13.35.17.png"
-                           "/data/aoe_images/Screenshot 2023-02-26 04.58.34.png"
-                           "/data/aoe_images/Screenshot 2023-03-07 22.48.50.png"                           
-
-                      ) )
         )
     (unwind-protect
          (cffi:with-foreign-string (filename (nth n image-filenames))
@@ -478,13 +457,5 @@
 
 (my-load-image (nth  0 *home-work-images*))
 
-
-(sb-ext:exit)
-
-
-
-
-
-
-
+;; (sb-ext:exit)
 
