@@ -68,8 +68,10 @@
   :IMREAD_GRAYSCALE
   :IMREAD_COLOR)
 
-(cffi:defcfun "easy_init" :pointer)
-(cffi:defctype return-pointer :pointer)
+
+(cffi:defctype mat-pointer :pointer)
+(cffi:defcfun "easy_init" mat-pointer)
+
 
 (defclass my-container ()
   ((pointer :initform (easy-init)
@@ -79,20 +81,12 @@
 
 (cffi:define-foreign-type my-container-type ()
   ()
-  (:actual-type :pointer)
+  (:actual-type mat-pointer)
   (:simple-parser my-container))
 
-(cffi:define-foreign-type return-pointer-type ()
-  ()
-  (:actual-type :pointer)
-  (:simple-parser return-pointer ))
 
 (defmethod cffi:translate-to-foreign (handle (type my-container-type))
   (slot-value handle 'pointer))
-
-
-(defmethod cffi:translate-from-foreign (ptr (type return-pointer-type))
-  (make-instance 'my-container :pointer ptr))
 
 (defmethod cffi:translate-from-foreign (ptr (type my-container-type))
   (make-instance 'my-container :pointer ptr))
@@ -148,7 +142,7 @@
   (q :int))
 
 
-(cffi:defcfun "adaptive_threshold" return-pointer
+(cffi:defcfun "adaptive_threshold" my-container
   (handle my-container))
 (cffi:defcfun "my_merge" :int)
 (cffi:defcfun "make_gray" :int)
@@ -457,5 +451,5 @@
 
 (my-load-image (nth  0 *home-work-images*))
 
-;; (sb-ext:exit)
+(sb-ext:exit)
 
