@@ -348,27 +348,7 @@ int hough_circles(double dp, double param1, double param2, int minRadius, int ma
 }
 
 
-int gaussian_blur(int mSize)
-{
-    Mat image;
-    Mat fImage;
-    Mat dst;
-    Mat result;
-    Mat output;
-    try {
-        image = imread(INPUT_STRING, IMREAD_GRAYSCALE);
-        GaussianBlur(image, dst, Size(mSize, mSize) , 0, 0);
-        divide(image, dst, result, 255);
-        // result.convertTo(output, CV_8U, 255);
-        imwrite(OUTPUT_STRING, result);
-        return 0;
-    } catch (cv::Exception e) {
-        cout << "Caught Exception " << endl;
-        cerr << e.what();
-        return -1;
-    }
-    return 0;
-}
+
 
 void* easy_init () {
     MyContainer* c = new MyContainer;
@@ -417,6 +397,28 @@ int save_image(void* ptr, char* filename)
     return 0;
 }
 
+
+void* gaussian_blur(void* ptr, int mSize)
+{
+    Mat src_gray;
+    Mat dst;
+    Mat result;
+    try {
+        MyContainer* c = static_cast<MyContainer*> (ptr);        
+        c->mat;
+        cvtColor(c->mat, src_gray, COLOR_BGR2GRAY);
+        GaussianBlur(src_gray, dst, Size(mSize, mSize) , 0, 0);
+        divide(src_gray, dst, result, 255);
+        MyContainer *output = new MyContainer(result);
+        return output;
+    } catch (cv::Exception e) {
+        cout << "Caught Exception " << endl;
+        cerr << e.what();
+        return nullptr;
+    }
+    return 0;
+}
+
 void* adaptive_threshold (void* ptr)
 {
     Mat dst;
@@ -454,6 +456,7 @@ void* adaptive_threshold (void* ptr)
         dst.create(src_gray.size(), src_gray.type());
 
         fastNlMeansDenoising(src_gray, dst, 3, 7, 21);
+        // dst = src_gray.clone();
 
         int blockSize = 501;
         int x1, y1 = 100;

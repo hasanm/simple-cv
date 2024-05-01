@@ -17,7 +17,7 @@ extern "C" {
     int hough_lines(int edgeThresh, double minTheta, double maxTheta);
     int hough_lines_p(int edgeThresh, int voteThreshold, int minLineLength, int maxLineGap);
     int hough_circles(double dp, double param1, double param2, int minRadius, int maxRadius);
-    int gaussian_blur(int mSize);
+
     int find_contours(int mSize, int edgeThresh);
     int find_inside();
 
@@ -29,6 +29,7 @@ extern "C" {
     int push_line(void* container, int x1, int x2, int y1, int y2, int r, int g, int b);
     int draw_lines(void* container);
     void* adaptive_threshold(void* container);
+    void* gaussian_blur(void* container, int mSize);    
     
 
 
