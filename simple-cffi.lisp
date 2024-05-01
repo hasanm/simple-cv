@@ -72,7 +72,8 @@
 (cffi:defcfun "easy_init" :pointer)
 
 (defclass my-container ()
-  ((pointer :initform (easy-init))
+  ((pointer :initform (easy-init)
+            :initarg :pointer)
    (c-strings :initform '())
    ))
 
